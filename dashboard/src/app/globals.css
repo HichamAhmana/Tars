@@ -1,7 +1,8 @@
 /* ── TARS Dashboard Global Styles ────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
+:root,
+html[data-theme="dark"] {
   --bg:            #010409;
   --bg-2:          #0d1117;
   --bg-3:          #161b22;
@@ -20,6 +21,23 @@
   --font-body:     'Rajdhani', sans-serif;
   --radius:        10px;
   --transition:    0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme="light"] {
+  --bg:            #f5f9ff;
+  --bg-2:          #ffffff;
+  --bg-3:          #eef3f8;
+  --surface:       rgba(255, 255, 255, 0.85);
+  --border:        rgba(0, 112, 170, 0.22);
+  --border-glow:   rgba(0, 112, 170, 0.5);
+  --accent:        #0077c2;
+  --accent-dim:    rgba(0, 119, 194, 0.08);
+  --accent-glow:   rgba(0, 119, 194, 0.3);
+  --green:         #218739;
+  --red:           #d1242f;
+  --yellow:        #9e6a03;
+  --text:          #1f2328;
+  --text-muted:    #59636e;
 }
 
 html { scroll-behavior: smooth; }
@@ -384,6 +402,105 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 4px 12px;
   border-radius: 4px;
   font-size: 0.78rem;
+}
+
+/* ── Push-to-Talk ────────────────────────────────────────────────────────── */
+.ptt-button {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: radial-gradient(circle at 35% 35%, var(--accent-dim), transparent 70%);
+  color: var(--accent);
+  font-size: 2.2rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+}
+.ptt-button:hover:not(:disabled) {
+  transform: scale(1.04);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+.ptt-button:disabled { opacity: 0.4; cursor: not-allowed; }
+.ptt-button.listening {
+  background: var(--accent);
+  color: var(--bg);
+  animation: ptt-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ptt-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   var(--accent-glow); }
+  50%      { box-shadow: 0 0 0 18px rgba(0,210,255,0); }
+}
+
+/* ── Live badge ──────────────────────────────────────────────────────────── */
+.live-badge {
+  font-size: 0.55rem;
+  padding: 2px 8px;
+  margin-left: 8px;
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  color: var(--green);
+  letter-spacing: 0.12em;
+  font-family: var(--font-display);
+  animation: blink 1.8s infinite;
+}
+@keyframes blink {
+  50% { opacity: 0.45; }
+}
+
+.log-skill {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Skills browser ──────────────────────────────────────────────────────── */
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.skill-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.skill-name {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.skill-desc {
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.skill-triggers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.trigger-chip {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
 }
 
 /* ── Stat pills ──────────────────────────────────────────────────────────── */
