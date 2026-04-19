@@ -24,6 +24,11 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Allow dashboard src/lib even though the broad lib/ pattern above
+# is meant for Python build artifacts.
+!dashboard/src/lib/
+!dashboard/src/lib/**
 MANIFEST
 
 # PyInstaller
