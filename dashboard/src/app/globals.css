@@ -1,4 +1,4 @@
-/* ── TARS Dashboard Global Styles ────────────────────────────────────────── */
+/* -- TARS Dashboard Global Styles ------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root,
@@ -60,7 +60,7 @@ body {
 ::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── Layout ─────────────────────────────────────────────────────────────── */
+/* -- Layout --------------------------------------------------------------- */
 .dashboard {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -82,7 +82,7 @@ body {
   .main-grid { grid-template-columns: 1fr; }
 }
 
-/* ── Glass Card ─────────────────────────────────────────────────────────── */
+/* -- Glass Card ----------------------------------------------------------- */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -115,7 +115,7 @@ body {
   border-radius: 2px;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* -- Header --------------------------------------------------------------- */
 .header {
   display: flex;
   align-items: center;
@@ -146,7 +146,7 @@ body {
   margin-top: 2px;
 }
 
-/* ── Status Orb ─────────────────────────────────────────────────────────── */
+/* -- Status Orb ----------------------------------------------------------- */
 .status-orb-wrap {
   display: flex;
   flex-direction: column;
@@ -209,7 +209,7 @@ body {
 .status-label.online { color: var(--accent); }
 .status-label.offline { color: var(--text-muted); }
 
-/* ── Button ─────────────────────────────────────────────────────────────── */
+/* -- Button --------------------------------------------------------------- */
 .btn {
   font-family: var(--font-display);
   font-size: 0.65rem;
@@ -252,7 +252,7 @@ body {
 }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── Command Log ─────────────────────────────────────────────────────────── */
+/* -- Command Log ----------------------------------------------------------- */
 .log-list {
   display: flex;
   flex-direction: column;
@@ -288,7 +288,7 @@ body {
 .log-command { flex: 1; color: var(--text); }
 .log-time { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
 
-/* ── Custom Commands Form ────────────────────────────────────────────────── */
+/* -- Custom Commands Form -------------------------------------------------- */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -351,7 +351,7 @@ body {
 }
 .cmd-delete:hover { color: var(--red); }
 
-/* ── Settings ────────────────────────────────────────────────────────────── */
+/* -- Settings -------------------------------------------------------------- */
 .settings-grid {
   display: flex;
   flex-direction: column;
@@ -392,7 +392,7 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 0 8px var(--accent);
 }
 
-/* ── Empty / error states ─────────────────────────────────────────────────── */
+/* -- Empty / error states --------------------------------------------------- */
 .empty { text-align: center; color: var(--text-muted); padding: 24px 0; font-size: 0.85rem; }
 .error-badge {
   display: inline-block;
@@ -404,7 +404,7 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 0.78rem;
 }
 
-/* ── Push-to-Talk ────────────────────────────────────────────────────────── */
+/* -- Push-to-Talk ---------------------------------------------------------- */
 .ptt-button {
   width: 110px;
   height: 110px;
@@ -432,7 +432,7 @@ input[type="range"]::-webkit-slider-thumb {
   50%      { box-shadow: 0 0 0 18px rgba(0,210,255,0); }
 }
 
-/* ── Live badge ──────────────────────────────────────────────────────────── */
+/* -- Live badge ------------------------------------------------------------ */
 .live-badge {
   font-size: 0.55rem;
   padding: 2px 8px;
@@ -460,7 +460,7 @@ input[type="range"]::-webkit-slider-thumb {
   text-transform: uppercase;
 }
 
-/* ── Skills browser ──────────────────────────────────────────────────────── */
+/* -- Skills browser -------------------------------------------------------- */
 .skill-list {
   display: flex;
   flex-direction: column;
@@ -503,7 +503,7 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-muted);
 }
 
-/* ── Stat pills ──────────────────────────────────────────────────────────── */
+/* -- Stat pills ------------------------------------------------------------ */
 .stat-row {
   display: flex;
   gap: 12px;

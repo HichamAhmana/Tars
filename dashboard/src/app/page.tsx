@@ -4,13 +4,13 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { api, EngineStatus, CommandRecord, CustomCommand, Skill } from '@/lib/api';
 import { EventStream, TarsEvent } from '@/lib/ws';
 
-/* ── Helpers ───────────────────────────────────────────────────────────── */
+/* -- Helpers ------------------------------------------------------------- */
 function fmtTime(iso: string) {
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-/* ── Minimal typing for the WebSpeech API ──────────────────────────────── */
+/* -- Minimal typing for the WebSpeech API -------------------------------- */
 interface SpeechRecognitionLike extends EventTarget {
   lang: string;
   continuous: boolean;
@@ -31,7 +31,7 @@ function getSpeechRecognition(): SpeechRecognitionCtor | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
-/* ── Status Orb ─────────────────────────────────────────────────────────── */
+/* -- Status Orb ----------------------------------------------------------- */
 function StatusOrb({
   online, loading, onToggle,
 }: { online: boolean; loading: boolean; onToggle: () => void }) {
@@ -54,7 +54,7 @@ function StatusOrb({
   );
 }
 
-/* ── Push-to-Talk ──────────────────────────────────────────────────────── */
+/* -- Push-to-Talk -------------------------------------------------------- */
 function PushToTalk({ onTranscript }: { onTranscript: (text: string) => void }) {
   const [supported] = useState<boolean | null>(() =>
     typeof window === 'undefined' ? null : !!getSpeechRecognition(),
@@ -120,7 +120,7 @@ function PushToTalk({ onTranscript }: { onTranscript: (text: string) => void }) 
   );
 }
 
-/* ── Stat Pills ─────────────────────────────────────────────────────────── */
+/* -- Stat Pills ----------------------------------------------------------- */
 function Stats({ total, success }: { total: number; success: number }) {
   const rate = total > 0 ? Math.round((success / total) * 100) : 0;
   return (
@@ -132,7 +132,7 @@ function Stats({ total, success }: { total: number; success: number }) {
   );
 }
 
-/* ── Command Log ─────────────────────────────────────────────────────────── */
+/* -- Command Log ----------------------------------------------------------- */
 function CommandLog({ records, onClear, live }: {
   records: CommandRecord[]; onClear: () => void; live: boolean;
 }) {
@@ -169,7 +169,7 @@ function CommandLog({ records, onClear, live }: {
   );
 }
 
-/* ── Custom Commands ─────────────────────────────────────────────────────── */
+/* -- Custom Commands ------------------------------------------------------- */
 function CustomCommands({ commands, onCreate, onDelete }: {
   commands: CustomCommand[];
   onCreate: (data: { trigger: string; action: string; description: string }) => void;
@@ -215,7 +215,7 @@ function CustomCommands({ commands, onCreate, onDelete }: {
   );
 }
 
-/* ── Skills Browser ─────────────────────────────────────────────────────── */
+/* -- Skills Browser ------------------------------------------------------- */
 function SkillsBrowser({ skills }: { skills: Skill[] }) {
   const [filter, setFilter] = useState('');
   const filtered = useMemo(() => {
@@ -257,7 +257,7 @@ function SkillsBrowser({ skills }: { skills: Skill[] }) {
   );
 }
 
-/* ── Settings Panel ─────────────────────────────────────────────────────── */
+/* -- Settings Panel ------------------------------------------------------- */
 function SettingsPanel({ status, onPatch }: {
   status: EngineStatus | null;
   onPatch: (d: Partial<EngineStatus>) => void;
@@ -335,7 +335,7 @@ function SettingsPanel({ status, onPatch }: {
   );
 }
 
-/* ── Main Page ───────────────────────────────────────────────────────────── */
+/* -- Main Page ------------------------------------------------------------- */
 export default function Dashboard() {
   const [status,   setStatus]   = useState<EngineStatus | null>(null);
   const [history,  setHistory]  = useState<CommandRecord[]>([]);
