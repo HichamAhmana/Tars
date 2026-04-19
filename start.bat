@@ -1,33 +1,26 @@
 @echo off
-title TARS - Voice PC Assistant
-color 0B
+rem Start TARS v2: Django backend + dashboard + engine (Windows).
+rem Requires the virtualenv at .\.venv and dashboard\node_modules.
 
-echo.
-echo  ============================================
-echo    T A R S  -  Voice PC Assistant
-echo  ============================================
-echo.
+pushd "%~dp0"
 
-:: ── Start Django API ─────────────────────────────────────────────────────
-echo  [1/2] Starting Django API on http://localhost:8000 ...
-start "TARS Django API" cmd /k "cd /d %~dp0 && call venv\Scripts\activate && python manage.py runserver 8000"
-timeout /t 2 /nobreak >nul
+if exist .venv\Scripts\activate.bat call .venv\Scripts\activate.bat
+if exist .env for /f "usebackq tokens=* delims=" %%A in (".env") do set "%%A"
 
-:: ── Start Next.js Dashboard ───────────────────────────────────────────────
-echo  [2/2] Starting Next.js Dashboard on http://localhost:3000 ...
-start "TARS Dashboard" cmd /k "cd /d %~dp0dashboard && npm run dev"
-timeout /t 3 /nobreak >nul
+python manage.py migrate --noinput
 
-:: ── Open browser ─────────────────────────────────────────────────────────
-echo  Opening dashboard in browser...
-start http://localhost:3000
+set "BACKEND_PORT=%TARS_BACKEND_PORT%"
+if "%BACKEND_PORT%"==""    set "BACKEND_PORT=8000"
+set "DASHBOARD_PORT=%TARS_DASHBOARD_PORT%"
+if "%DASHBOARD_PORT%"=="" set "DASHBOARD_PORT=3000"
 
-echo.
-echo  TARS is starting up!
-echo  - Dashboard : http://localhost:3000
-echo  - API       : http://localhost:8000/api
-echo.
-echo  To run the voice engine, open a NEW terminal and run:
-echo    cd engine ^&^& python main.py
-echo.
-pause
+echo Starting Django ASGI (daphne) on :%BACKEND_PORT%
+start "tars-backend" daphne -b 0.0.0.0 -p %BACKEND_PORT% backend.asgi:application
+
+echo Starting Next.js dashboard on :%DASHBOARD_PORT%
+start "tars-dashboard" cmd /c "cd dashboard && npm run dev -- -p %DASHBOARD_PORT%"
+
+echo Starting TARS engine
+python -m engine.main
+
+popd

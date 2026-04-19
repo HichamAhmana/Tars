@@ -1,4 +1,23 @@
-SpeechRecognition
-pyaudio
-pyttsx3
-pyautogui
+# ── Core backend ────────────────────────────────────────────────────────────
+Django>=4.2,<6.1
+djangorestframework>=3.14
+django-cors-headers>=4.0
+channels>=4.0
+
+# ── Core engine (cross-platform) ────────────────────────────────────────────
+SpeechRecognition>=3.10
+pyttsx3>=2.90
+pyautogui>=0.9
+
+# ── Audio capture (cross-platform fallback) ────────────────────────────────
+sounddevice>=0.4; platform_system != "Windows"
+soundfile>=0.12;  platform_system != "Windows"
+numpy>=1.24;      platform_system != "Windows"
+
+# ── Optional integrations (opt-in via env vars; see .env.example) ──────────
+# pyaudio            # native microphone on Windows; install separately if needed
+# pvporcupine        # offline wake-word engine (requires free Picovoice key)
+# pvrecorder         # companion audio recorder for Porcupine
+# faster-whisper     # local offline STT
+# edge-tts           # neural Edge TTS voices
+# playsound          # MP3 playback for edge-tts

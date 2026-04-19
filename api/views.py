@@ -1,22 +1,34 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+"""REST API for the TARS dashboard and engine."""
+from __future__ import annotations
 
-from .models import CommandHistory, CustomCommand, EngineSettings
+from django.conf import settings as django_settings
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from . import engine_manager
+from .auth import APITokenAuthentication, TarsPermission
+from .events import publish
+from .models import APIToken, CommandHistory, CustomCommand, EngineSettings
 from .serializers import (
+    APITokenSerializer,
     CommandHistorySerializer,
     CustomCommandSerializer,
     EngineSettingsSerializer,
 )
-from . import engine_manager
+
+
+class TarsAPIView(APIView):
+    """Base class that applies TARS auth to every endpoint at once."""
+    authentication_classes = [APITokenAuthentication]
+    permission_classes = [TarsPermission]
 
 
 # ── Engine control ─────────────────────────────────────────────────────────────
 
-class EngineStatusView(APIView):
+class EngineStatusView(TarsAPIView):
     """GET  → current status + settings
-       POST → start or stop the engine  (body: {"action": "start"|"stop"})
-    """
+       POST → start or stop the engine  (body: {"action": "start"|"stop"})"""
 
     def get(self, request):
         settings = EngineSettings.get()
@@ -27,55 +39,66 @@ class EngineStatusView(APIView):
             "wake_word":      settings.wake_word,
             "tts_rate":       settings.tts_rate,
             "tts_volume":     settings.tts_volume,
+            "brain_provider": settings.brain_provider,
+            "stt_provider":   settings.stt_provider,
+            "tts_provider":   settings.tts_provider,
         })
 
     def post(self, request):
-        action = request.data.get("action", "").lower()
-        settings = EngineSettings.get()
+        action = (request.data.get("action") or "").lower()
+        settings_row = EngineSettings.get()
 
         if action == "start":
             started = engine_manager.start_engine()
-            settings.engine_running = True
-            settings.save()
+            settings_row.engine_running = True
+            settings_row.save()
+            publish("engine.state", {"running": True})
             return Response({
                 "message": "Engine started." if started else "Engine already running.",
                 "engine_running": True,
             })
-        elif action == "stop":
+        if action == "stop":
             stopped = engine_manager.stop_engine()
-            settings.engine_running = False
-            settings.save()
+            settings_row.engine_running = False
+            settings_row.save()
+            publish("engine.state", {"running": False})
             return Response({
                 "message": "Engine stopped." if stopped else "Engine was not running.",
                 "engine_running": False,
             })
-        else:
-            return Response(
-                {"error": "Invalid action. Use 'start' or 'stop'."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return Response(
+            {"error": "Invalid action. Use 'start' or 'stop'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 # ── Command history ────────────────────────────────────────────────────────────
 
-class CommandHistoryView(APIView):
-    """GET → last N commands (default 50) | DELETE → clear all history"""
+class CommandHistoryView(TarsAPIView):
+    """GET → last N commands | POST → log one (engine uses this) | DELETE → clear all"""
 
     def get(self, request):
-        limit = int(request.query_params.get("limit", 50))
+        limit = min(int(request.query_params.get("limit", 100)), 500)
         qs = CommandHistory.objects.all()[:limit]
         return Response(CommandHistorySerializer(qs, many=True).data)
 
+    def post(self, request):
+        serializer = CommandHistorySerializer(data=request.data)
+        if serializer.is_valid():
+            record = serializer.save()
+            publish("command.new", CommandHistorySerializer(record).data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request):
         CommandHistory.objects.all().delete()
+        publish("history.cleared", {})
         return Response({"message": "History cleared."}, status=status.HTTP_204_NO_CONTENT)
 
 
 # ── Custom commands ────────────────────────────────────────────────────────────
 
-class CustomCommandListView(APIView):
-    """GET → list all | POST → create new"""
-
+class CustomCommandListView(TarsAPIView):
     def get(self, request):
         qs = CustomCommand.objects.all()
         return Response(CustomCommandSerializer(qs, many=True).data)
@@ -84,13 +107,12 @@ class CustomCommandListView(APIView):
         serializer = CustomCommandSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            publish("command.custom.new", serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CustomCommandDetailView(APIView):
-    """GET | PUT | DELETE  for a single custom command"""
-
+class CustomCommandDetailView(TarsAPIView):
     def _get_obj(self, pk):
         try:
             return CustomCommand.objects.get(pk=pk)
@@ -110,6 +132,7 @@ class CustomCommandDetailView(APIView):
         serializer = CustomCommandSerializer(obj, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            publish("command.custom.updated", serializer.data)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -117,23 +140,90 @@ class CustomCommandDetailView(APIView):
         obj = self._get_obj(pk)
         if not obj:
             return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        pk = obj.pk
         obj.delete()
+        publish("command.custom.deleted", {"id": pk})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ── Engine settings ────────────────────────────────────────────────────────────
 
-class EngineSettingsView(APIView):
-    """GET → current settings | PATCH → update settings"""
-
+class EngineSettingsView(TarsAPIView):
     def get(self, request):
-        settings = EngineSettings.get()
-        return Response(EngineSettingsSerializer(settings).data)
+        return Response(EngineSettingsSerializer(EngineSettings.get()).data)
 
     def patch(self, request):
-        settings = EngineSettings.get()
-        serializer = EngineSettingsSerializer(settings, data=request.data, partial=True)
+        settings_row = EngineSettings.get()
+        serializer = EngineSettingsSerializer(settings_row, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            publish("settings.updated", serializer.data)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ── Skills introspection ──────────────────────────────────────────────────────
+
+class SkillListView(TarsAPIView):
+    """Expose the registered engine skills to the dashboard."""
+
+    def get(self, request):
+        try:
+            from engine.skills import discover
+        except Exception:  # pragma: no cover - engine package missing on minimal deployments
+            return Response([])
+        intents = discover()
+        return Response([
+            {
+                "name":        intent.name,
+                "description": intent.description,
+                "triggers":    list(intent.triggers),
+                "priority":    intent.priority,
+            }
+            for intent in intents
+        ])
+
+
+# ── Speak (dashboard → engine) ─────────────────────────────────────────────────
+
+class SpeakView(TarsAPIView):
+    """POST {"text": "..."} — broadcast a "speak" event so the running
+    engine (or any listener) can say it aloud. This is a fire-and-forget
+    relay; it doesn't actually synthesise speech server-side.
+    """
+
+    def post(self, request):
+        text = (request.data.get("text") or "").strip()
+        if not text:
+            return Response({"error": "Missing 'text'."}, status=status.HTTP_400_BAD_REQUEST)
+        publish("engine.speak", {"text": text})
+        return Response({"ok": True, "text": text})
+
+
+# ── Tokens ────────────────────────────────────────────────────────────────────
+
+class APITokenView(TarsAPIView):
+    """GET → list tokens | POST → create a new one."""
+    # Token management is only ever meaningful when auth is on; still require it.
+
+    def get(self, request):
+        return Response(APITokenSerializer(APIToken.objects.all(), many=True).data)
+
+    def post(self, request):
+        name = (request.data.get("name") or "").strip()
+        token = APIToken.create(name=name)
+        return Response(APITokenSerializer(token).data, status=status.HTTP_201_CREATED)
+
+
+# ── Meta / healthcheck (unauthenticated) ───────────────────────────────────────
+
+class HealthView(APIView):
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    def get(self, request):
+        return Response({
+            "status": "ok",
+            "version": "2.0.0",
+            "auth_required": getattr(django_settings, "TARS_REQUIRE_AUTH", False),
+        })
