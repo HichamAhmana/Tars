@@ -21,6 +21,6 @@ echo Starting Next.js dashboard on :%DASHBOARD_PORT%
 start "tars-dashboard" cmd /c "cd dashboard && npm run dev -- -p %DASHBOARD_PORT%"
 
 echo Starting TARS engine
-python -m engine.main
+python manage.py run_engine
 
 popd

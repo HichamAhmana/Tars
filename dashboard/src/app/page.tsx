@@ -306,6 +306,7 @@ function SettingsPanel({ status, onPatch }: {
             <option value="openai">openai</option>
             <option value="groq">groq</option>
             <option value="ollama">ollama</option>
+            <option value="gemini">gemini</option>
           </select>
         </div>
         <div className="setting-row">
@@ -348,6 +349,7 @@ export default function Dashboard() {
     const saved = window.localStorage.getItem('tars-theme');
     return saved === 'light' ? 'light' : 'dark';
   });
+  const [clock, setClock] = useState('');
   const [wsLive, setWsLive] = useState(false);
 
   // Sync theme to <html data-theme> + persist
@@ -355,6 +357,17 @@ export default function Dashboard() {
     if (typeof document !== 'undefined') document.documentElement.dataset.theme = theme;
     if (typeof window   !== 'undefined') window.localStorage.setItem('tars-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const updateClock = () => setClock(new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }));
+
+    updateClock();
+    const id = setInterval(updateClock, 60000);
+    return () => clearInterval(id);
+  }, []);
 
   // Full refresh via REST
   const refresh = useCallback(async () => {
@@ -424,8 +437,7 @@ export default function Dashboard() {
 
   const handlePushToTalk = async (text: string) => {
     try {
-      await api.speak(text);
-      await api.logCommand(text, true, 'browser.push_to_talk');
+      await api.executeCommand(text);
     } catch {
       /* surface via apiError already */
     }
@@ -451,7 +463,7 @@ export default function Dashboard() {
             {theme === 'dark' ? '☾' : '☀'}
           </button>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {clock || '…'}
           </span>
         </div>
       </header>

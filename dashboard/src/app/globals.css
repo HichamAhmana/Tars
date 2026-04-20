@@ -376,6 +376,7 @@ body {
   color: var(--accent);
 }
 input[type="range"] {
+  appearance: none;
   -webkit-appearance: none;
   width: 120px;
   height: 4px;
@@ -384,6 +385,7 @@ input[type="range"] {
   outline: none;
 }
 input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
   -webkit-appearance: none;
   width: 14px; height: 14px;
   border-radius: 50%;

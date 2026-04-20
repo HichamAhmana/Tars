@@ -22,10 +22,9 @@ def start_engine() -> bool:
         if _process and _process.poll() is None:
             return False  # Already running
         _process = subprocess.Popen(
-            [sys.executable, ENGINE_SCRIPT],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
+            [sys.executable, "-m", "engine.main"],
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), '..')),
+            # Allow logs to flow straight to the console; omitting PIPE prevents deadlocks
         )
         return True
 

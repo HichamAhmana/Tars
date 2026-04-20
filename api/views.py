@@ -200,6 +200,39 @@ class SpeakView(TarsAPIView):
         return Response({"ok": True, "text": text})
 
 
+class ExecuteCommandView(TarsAPIView):
+    """POST {"text": "..."} — actively execute a command via PTT."""
+
+    def post(self, request):
+        text = (request.data.get("text") or "").strip()
+        if not text:
+            return Response({"error": "Missing 'text'."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from engine.brain import Brain
+            from engine.memory import Memory
+            from engine import platform as platform_module
+            from engine import api_client
+            
+            driver = platform_module.get()
+            memory = Memory(max_turns=2)
+            
+            def dashboard_speak(out_text: str):
+                publish("engine.speak", {"text": out_text})
+                
+            brain = Brain(platform=driver, speak=dashboard_speak, memory=memory)
+            decision = brain.handle(text)
+            
+            success = decision.kind != "none"
+            skill_name = decision.skill_name or ("answer" if decision.kind == "answer" else None)
+            
+            api_client.push_command(text, success, skill=skill_name)
+            
+            return Response({"ok": True, "success": success, "skill": skill_name})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 # ── Tokens ────────────────────────────────────────────────────────────────────
 
 class APITokenView(TarsAPIView):

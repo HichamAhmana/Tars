@@ -35,7 +35,7 @@ class Speaker:
         engine.setProperty("volume", config.TTS_VOLUME)
         try:
             for voice in engine.getProperty("voices"):
-                if "david" in voice.name.lower() or "male" in voice.name.lower():
+                if "zira" in voice.name.lower() or "female" in voice.name.lower():
                     engine.setProperty("voice", voice.id)
                     break
         except Exception:

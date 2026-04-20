@@ -46,6 +46,7 @@ export interface Skill {
 const API_BASE =
   (typeof window !== 'undefined' && (window as unknown as { __TARS_API_BASE__?: string }).__TARS_API_BASE__) ||
   process.env.NEXT_PUBLIC_TARS_API_BASE ||
+  process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:8000/api';
 
 const API_TOKEN =
@@ -67,7 +68,21 @@ async function request<T>(
   const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
   if (!res.ok) {
     let detail: string | undefined;
-    try { detail = (await res.json())?.detail || (await res.text()); } catch { /* empty */ }
+    try {
+      const payload = await res.json();
+      if (payload?.detail) {
+        detail = payload.detail;
+      } else if (typeof payload === 'string') {
+        detail = payload;
+      } else if (payload && typeof payload === 'object') {
+        detail = Object.values(payload)
+          .flatMap(value => Array.isArray(value) ? value : [value])
+          .filter(Boolean)
+          .join(' | ');
+      }
+    } catch {
+      detail = await res.text();
+    }
     throw new Error(detail || `Request failed (${res.status})`);
   }
   if (init.parse === 'none' || res.status === 204) return undefined as unknown as T;
@@ -87,6 +102,10 @@ export const api = {
                                             body: JSON.stringify({ action: 'stop' }),
                                           }),
   speak:       (text: string)          => request<{ ok: boolean }>('/engine/speak/', {
+                                            method: 'POST',
+                                            body: JSON.stringify({ text }),
+                                          }),
+  executeCommand: (text: string)       => request<{ ok: boolean; success: boolean; skill: string | null }>('/engine/command/', {
                                             method: 'POST',
                                             body: JSON.stringify({ text }),
                                           }),

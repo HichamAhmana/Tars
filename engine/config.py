@@ -9,6 +9,12 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from dotenv import load_dotenv
+
+# Load .env from the project root
+_ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+load_dotenv(_ENV_PATH)
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _env(name: str, default: Any) -> str:
@@ -52,7 +58,7 @@ WHISPER_DEVICE: str = _env("TARS_WHISPER_DEVICE", "cpu")
 
 # ── Brain (LLM intent parser) ────────────────────────────────────────────────
 # ``rules`` is the original keyword router. Anything else plugs in an LLM.
-BRAIN_PROVIDER: str = _env("TARS_BRAIN_PROVIDER", "rules").lower()  # rules | openai | groq | ollama
+BRAIN_PROVIDER: str = _env("TARS_BRAIN_PROVIDER", "rules").lower()  # rules | openai | groq | ollama | gemini
 BRAIN_MODEL: str = _env("TARS_BRAIN_MODEL", "gpt-4o-mini")
 BRAIN_API_KEY: str = _env("TARS_BRAIN_API_KEY", "")
 BRAIN_BASE_URL: str = _env("TARS_BRAIN_BASE_URL", "")

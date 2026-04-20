@@ -8,7 +8,26 @@ from engine.skills import SkillContext, skill
 def play(text: str, ctx: SkillContext) -> bool:
     if "pause" in text or "playlist" in text:
         return False
-    ctx.speak("Playing.")
+
+    lower = text.lower()
+    if len(lower) >= 5 and "play " in lower:
+        # Extract everything after "play"
+        query_start = lower.find("play ") + 5
+        query = text[query_start:].strip()
+        
+        if query.lower().endswith("on youtube"):
+            query = query[:-10].strip()
+        
+        if query:
+            ctx.speak(f"Playing {query}")
+            try:
+                import pywhatkit
+                pywhatkit.playonyt(query)
+            except Exception as e:
+                ctx.speak("I'm sorry, I couldn't reach YouTube.")
+            return True
+
+    ctx.speak("Resuming playback.")
     return ctx.platform.media_key("playpause")
 
 

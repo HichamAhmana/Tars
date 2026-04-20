@@ -8,6 +8,7 @@ urlpatterns = [
     # Engine
     path("engine/status/",       views.EngineStatusView.as_view(),      name="engine-status"),
     path("engine/speak/",        views.SpeakView.as_view(),             name="engine-speak"),
+    path("engine/command/",      views.ExecuteCommandView.as_view(),    name="engine-command"),
     # History
     path("history/",             views.CommandHistoryView.as_view(),    name="command-history"),
     path("history/log/",         views.CommandHistoryView.as_view(),    name="command-history-log"),  # legacy

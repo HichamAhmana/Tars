@@ -125,6 +125,9 @@ def _call_openai_compatible(provider: str, messages: list[dict]) -> str:
     elif provider == "groq":
         base = config.BRAIN_BASE_URL or "https://api.groq.com/openai/v1"
         api_key = config.BRAIN_API_KEY
+    elif provider == "gemini":
+        base = config.BRAIN_BASE_URL or "https://generativelanguage.googleapis.com/v1beta/openai"
+        api_key = config.BRAIN_API_KEY
     else:  # openai or custom
         base = config.BRAIN_BASE_URL or "https://api.openai.com/v1"
         api_key = config.BRAIN_API_KEY
@@ -132,8 +135,12 @@ def _call_openai_compatible(provider: str, messages: list[dict]) -> str:
     if not api_key and provider != "ollama":
         return ""
 
+    model = config.BRAIN_MODEL
+    if provider == "gemini" and model == "gpt-4o-mini":
+        model = "gemini-2.5-flash"
+
     body = json.dumps({
-        "model": config.BRAIN_MODEL,
+        "model": model,
         "messages": messages,
         "temperature": 0.3,
     }).encode()
